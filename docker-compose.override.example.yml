@@ -1,0 +1,15 @@
+# Optional local overrides. Copy to docker-compose.override.yml to use.
+# Example: bind mounts for development, different ports, or local env.
+
+# services:
+#   api:
+#     build:
+#       context: ./apps/api
+#       dockerfile: Dockerfile
+#     volumes:
+#       - ./apps/api/src:/app/src
+#     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+#   web:
+#     volumes:
+#       - ./apps/web/src:/app/src
+#     command: npm run dev

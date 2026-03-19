@@ -1,0 +1,12 @@
+# Optional root .dockerignore for context sent to Docker
+.git
+.gitignore
+.env
+.env.*
+*.md
+node_modules
+.next
+__pycache__
+*.pyc
+.venv
+venv
