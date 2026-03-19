@@ -1,23 +1,17 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 
-const LOGO_ICON_TRANSPARENT = "/logo/cloud-nexus-logo-icon-transparent.svg";
-const LOGO_PRIMARY = "/logo/cloud-nexus-logo-primary.svg";
-const LOGO_DARK = "/logo/cloud-nexus-logo-dark.svg";
+/** Static assets under `apps/web/public/logo`. */
+const LOGO_SIDEBAR_ICON = "/logo/cloud-nexus-sidebar-icon.svg";
+const LOGO_HEADER = "/logo/cloud-nexus-header.svg";
+const LOGO_EXACT = "/logo/cloud-nexus-exact-logo.svg";
 
-/** Cloud Nexus logo mark (C + infinity + cloud) from official pack. Use in sidebar, header. */
-export function CloudNexusIcon({
-  className = "",
-  size = 24,
-}: {
-  className?: string;
-  size?: number;
-}) {
+/** Square sidebar mark (512×512). */
+export function CloudNexusIcon({ className = "", size = 24 }: { className?: string; size?: number }) {
   return (
     <img
-      src={LOGO_ICON_TRANSPARENT}
+      src={LOGO_SIDEBAR_ICON}
       width={size}
       height={size}
       alt=""
@@ -27,32 +21,27 @@ export function CloudNexusIcon({
   );
 }
 
-/** Full logo: horizontal logo with "Cloud Nexus" wordmark from official pack. */
+/** Sidebar: full exact logo when `showText`, else sidebar icon. */
 export function CloudNexusLogo({
   showText = true,
   iconSize = 28,
   className = "",
   href = "/dashboard",
-  variant = "default",
 }: {
   showText?: boolean;
   iconSize?: number;
   className?: string;
   href?: string;
-  variant?: "default" | "dark";
 }) {
-  const logoSrc = variant === "dark" ? LOGO_DARK : LOGO_PRIMARY;
   const content = showText ? (
-    <Image
-      src={logoSrc}
+    <img
+      src={LOGO_EXACT}
       alt="Cloud Nexus"
-      width={140}
-      height={32}
-      className="h-8 w-auto object-contain"
+      className="h-8 w-auto max-w-[min(100%,220px)] object-contain object-left"
     />
   ) : (
     <img
-      src={LOGO_ICON_TRANSPARENT}
+      src={LOGO_SIDEBAR_ICON}
       width={iconSize}
       height={iconSize}
       alt=""
@@ -71,15 +60,17 @@ export function CloudNexusLogo({
   );
 }
 
-/** Icon-only for collapsed sidebar or header. */
-export function CloudNexusLogoIcon({ className = "", size = 24 }: { className?: string; size?: number }) {
+/**
+ * Top bar: horizontal header artwork (1800×900 source).
+ * `size` is the rendered height in CSS pixels; width scales with aspect ratio.
+ */
+export function CloudNexusLogoIcon({ className = "", size = 28 }: { className?: string; size?: number }) {
   return (
     <img
-      src={LOGO_ICON_TRANSPARENT}
-      width={size}
-      height={size}
+      src={LOGO_HEADER}
       alt=""
-      className={className}
+      height={size}
+      className={`w-auto max-w-[min(100vw-4rem,280px)] object-contain object-left ${className}`}
       aria-hidden
     />
   );

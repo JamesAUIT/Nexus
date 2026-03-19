@@ -33,7 +33,6 @@ const nav = [
   { href: "/change-events", label: "Change events" },
   { href: "/connectivity", label: "Connectivity" },
   { href: "/insights", label: "Insights" },
-  { href: "/script-library", label: "Script Library" },
   { href: "/scripts", label: "Scripts" },
   { href: "/ops-requests", label: "Operations Requests" },
 ];
@@ -43,7 +42,7 @@ export function AppSidebar() {
   return (
     <aside className="w-64 border-r bg-muted/30 flex flex-col min-h-screen">
       <div className="p-4 border-b flex items-center min-w-0">
-        <CloudNexusLogo href="/dashboard" iconSize={28} className="text-foreground" />
+        <CloudNexusLogo href="/dashboard" iconSize={28} />
       </div>
       <nav className="flex-1 p-2 space-y-0.5 overflow-auto">
         {nav.map((item) => (
