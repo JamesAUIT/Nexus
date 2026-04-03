@@ -42,7 +42,7 @@ export default function CloudOpsPage() {
 
   const staleBandsQuery = useQuery({
     queryKey: ["cloud-ops", "snapshots", "stale-bands", clusterId],
-    queryFn: () => apiFetch<{ bands: Record<string, number } }>(`${base}/snapshots/stale-bands${clusterId ? `?cluster_id=${clusterId}` : ""}`, { token: getToken() }),
+    queryFn: () => apiFetch<{ bands: Record<string, number> }>(`${base}/snapshots/stale-bands${clusterId ? `?cluster_id=${clusterId}` : ""}`, { token: getToken() }),
     enabled: tab === "Snapshots",
   });
 
@@ -83,7 +83,7 @@ export default function CloudOpsPage() {
     },
   });
 
-  const snapshots = (tab === "Snapshots" && snapshotsQuery.data?.data) ?? [];
+  const snapshots = tab === "Snapshots" ? (snapshotsQuery.data?.data ?? []) : [];
   const bands = (tab === "Snapshots" && staleBandsQuery.data?.bands) ?? {};
   const diagnostics = tab === "Diagnostics" ? diagnosticsQuery.data : null;
   const patchPlan = tab === "Patch" ? patchQuery.data : null;
