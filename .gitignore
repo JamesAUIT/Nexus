@@ -18,7 +18,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python setuptools output at repo root only (do not use `lib/` — that ignores apps/web/src/lib/)
+/lib/
 lib64/
 parts/
 sdist/
