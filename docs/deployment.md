@@ -87,6 +87,7 @@ For local development without TLS, you can expose `web` on 3000 and `api` on 800
 | `-bash: ./deploy.sh#: No such file` | You pasted a `#` from a comment onto the command. Run `./deploy.sh` or `bash deploy.sh` with **no** `#` at the end. |
 | `Permission denied` on `./deploy.sh` | Run `chmod +x deploy.sh` once, or use `bash deploy.sh` (no execute bit needed). |
 | `deploy.sh` not found | You are not in the repo root. `cd` to the folder that contains `deploy.sh` (avoid nesting clones: e.g. one `git clone …` under `/opt/cloud-nexus`, not `cloud-nexus/cloud-nexus/cloud-nexus`). |
+| `npm run build` fails in Docker (`target web`) | Pull latest `main` (includes ESLint skipped during image build and higher Node heap). Capture full logs: `docker compose build --no-cache --progress=plain web 2>&1 \| tee /tmp/web-build.log`. If the host has little RAM, add swap or increase `NODE_OPTIONS` in `apps/web/Dockerfile`. |
 
 ## Production
 
