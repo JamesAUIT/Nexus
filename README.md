@@ -63,9 +63,9 @@ make migrate
 make seed
 ```
 
-- **Web UI:** http://localhost:3000  
-- **API:** http://localhost:8000  
-- **API docs:** http://localhost:8000/docs  
+- **Web UI (HTTPS via nginx):** https://localhost:443 (self-signed certificate; browser will warn)  
+- **API:** same host, paths under `/api/…` and `/health` (or expose ports with `docker-compose.override.yml`; see [.env.example](.env.example))  
+- **API docs:** https://localhost/docs  
 
 ## Environment
 

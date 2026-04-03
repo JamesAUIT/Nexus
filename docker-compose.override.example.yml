@@ -1,15 +1,12 @@
-# Optional local overrides. Copy to docker-compose.override.yml to use.
-# Example: bind mounts for development, different ports, or local env.
+# Optional local overrides. Copy to docker-compose.override.yml
+#
+# Expose web + API directly (e.g. http://localhost:3000) while nginx still serves https://localhost.
+# Set NEXT_PUBLIC_API_URL=http://localhost:8000 in .env for this mode.
 
 # services:
-#   api:
-#     build:
-#       context: ./apps/api
-#       dockerfile: Dockerfile
-#     volumes:
-#       - ./apps/api/src:/app/src
-#     command: uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
 #   web:
-#     volumes:
-#       - ./apps/web/src:/app/src
-#     command: npm run dev
+#     ports:
+#       - "3000:3000"
+#   api:
+#     ports:
+#       - "8000:8000"

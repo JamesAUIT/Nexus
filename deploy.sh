@@ -149,4 +149,4 @@ else
   echo "Seed skipped (--skip-seed)."
 fi
 
-echo "Deploy complete. Web: http://localhost:3000  API: http://localhost:8000"
+echo "Deploy complete. HTTPS (UI + API via nginx): https://localhost:443  (self-signed: use -k with curl or trust cert)"

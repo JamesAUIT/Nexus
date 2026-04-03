@@ -49,8 +49,6 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
-    ports:
-      - "8000:8000"
     networks:
       - nexus
 
@@ -60,11 +58,25 @@ services:
       dockerfile: Dockerfile
     env_file: .env
     environment:
-      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-}
+      INTERNAL_API_URL: http://api:8000
     depends_on:
       - api
+    networks:
+      - nexus
+
+  nginx:
+    build:
+      context: ./infra/nginx
+      dockerfile: Dockerfile
     ports:
-      - "3000:3000"
+      - "443:443"
+      - "80:80"
+    depends_on:
+      api:
+        condition: service_healthy
+      web:
+        condition: service_started
     networks:
       - nexus
 
