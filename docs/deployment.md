@@ -9,17 +9,58 @@
   - `ENCRYPTION_KEY` (32 bytes, hex or base64)
   - `ADMIN_PASSWORD` for break-glass admin
 
-## One-shot deploy (Debian 13 VM)
+## Get the code (Git)
 
-From the repo root on a Debian 13 VM, run:
+**Clone** (first time on the server):
 
 ```bash
-sudo ./deploy.sh
+git clone https://github.com/JamesAUIT/Nexus.git cloud-nexus
+cd cloud-nexus
 ```
 
-This will install Docker and Docker Compose (if missing), create `.env` from `.env.example` if needed (you must then edit `.env` and re-run, or use `./deploy.sh --prompt-env` to set secrets interactively), start the stack, run migrations, and seed if `DEMO_MODE=true` or `SEED_DB=1`. Options:
+SSH (if your SSH key is added to GitHub):
 
-- `--no-install-docker` — skip Docker install (use existing Docker)
+```bash
+git clone git@github.com:JamesAUIT/Nexus.git cloud-nexus
+cd cloud-nexus
+```
+
+Use your own fork or GitLab URL instead of the above if you host the repo elsewhere.
+
+**Pull updates** (after the repo is already on disk):
+
+```bash
+cd /path/to/cloud-nexus
+git pull
+bash deploy.sh
+```
+
+Use the directory that **contains** `deploy.sh` (run `test -f deploy.sh && echo OK`). If `./deploy.sh` says “Permission denied”, run `chmod +x deploy.sh` once or always use `bash deploy.sh`.
+
+Keep `.env` on the server; it is not in Git (see `.gitignore`). Resolve merge conflicts locally if you changed tracked files.
+
+## One-shot deploy (Debian 13 VM)
+
+From the repo root on a Debian 13 VM:
+
+**No sudo** — if Docker Engine and Compose v2 are already installed and your user can run `docker` (e.g. in the `docker` group):
+
+```bash
+bash deploy.sh
+```
+
+**First-time Docker on the host** (apt install needs root once):
+
+```bash
+sudo bash deploy.sh --install-docker
+```
+
+After that, use `bash deploy.sh` as a normal user (default is not to run apt).
+
+The script creates `.env` from `.env.example` if needed (you must then edit `.env` and re-run, or use `./deploy.sh --prompt-env` to set secrets interactively), starts the stack, runs migrations, and seeds if `DEMO_MODE=true` or `SEED_DB=1`. Options:
+
+- `--install-docker` — run Debian apt install for Docker (requires root)
+- `--no-install-docker` — do not run apt Docker install (default; use existing Docker)
 - `--skip-seed` — do not run seed even when DEMO_MODE/SEED_DB is set
 - `--prompt-env` — when creating `.env`, prompt for required secrets
 
@@ -36,6 +77,14 @@ docker compose run --rm api python -m src.db.seed   # with DEMO_MODE=true or SEE
 ## Reverse proxy
 
 Use `infra/nginx/` or your own reverse proxy in front of `web:3000` and `api:8000`. Set `NEXT_PUBLIC_API_URL` to the public API base URL so the frontend can call the API.
+
+## Troubleshooting
+
+| Symptom | What to do |
+|--------|------------|
+| `-bash: ./deploy.sh#: No such file` | You pasted a `#` from a comment onto the command. Run `./deploy.sh` or `bash deploy.sh` with **no** `#` at the end. |
+| `Permission denied` on `./deploy.sh` | Run `chmod +x deploy.sh` once, or use `bash deploy.sh` (no execute bit needed). |
+| `deploy.sh` not found | You are not in the repo root. `cd` to the folder that contains `deploy.sh` (avoid nesting clones: e.g. one `git clone …` under `/opt/cloud-nexus`, not `cloud-nexus/cloud-nexus/cloud-nexus`). |
 
 ## Production
 

@@ -101,6 +101,7 @@ See [STRUCTURE.md](STRUCTURE.md) for the full tree.
 
 ## Deployment
 
+- Clone or `git pull` on the server, then run `bash deploy.sh` (see [Deployment](docs/deployment.md) for Git URLs, Debian steps, and troubleshooting).
 - Use Docker Compose with env-based config.
 - Put a reverse proxy (e.g. nginx) in front of web and api; see `infra/nginx/`.
 - Do not commit secrets; inject via env or secret manager.

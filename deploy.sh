@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Cloud Nexus — Deploy to Debian 13 VM
 # Run from repo root. Idempotent where possible.
-# For Docker install, run as root or with sudo.
+# No sudo required if Docker Engine + Compose v2 are already installed and this user can run `docker` (e.g. member of `docker` group).
+# One-time OS install of Docker (apt): run INSTALL_DOCKER=1 as root, or install Docker manually then use ./deploy.sh
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -10,12 +11,13 @@ cd "$SCRIPT_DIR"
 # ---------------------------------------------------------------------------
 # Options (override with env or pass after --)
 # ---------------------------------------------------------------------------
-INSTALL_DOCKER="${INSTALL_DOCKER:-1}"
+INSTALL_DOCKER="${INSTALL_DOCKER:-0}"
 SKIP_SEED="${SKIP_SEED:-}"
 FORCE_ENV_PROMPT="${FORCE_ENV_PROMPT:-}"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    --install-docker)    INSTALL_DOCKER=1; shift ;;
     --no-install-docker) INSTALL_DOCKER=0; shift ;;
     --skip-seed)         SKIP_SEED=1; shift ;;
     --prompt-env)        FORCE_ENV_PROMPT=1; shift ;;
@@ -23,14 +25,19 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ "$INSTALL_DOCKER" == "1" ]] && [[ $(id -u) -ne 0 ]]; then
-  echo "Docker install requires root. Run: sudo $0 [options]"
+# ---------------------------------------------------------------------------
+# 1. Docker + Docker Compose (Debian, root only) + require docker compose
+# ---------------------------------------------------------------------------
+ensure_docker_compose() {
+  if command -v docker &>/dev/null && docker compose version &>/dev/null 2>&1; then
+    return 0
+  fi
+  echo "ERROR: Docker Engine and Compose v2 ('docker compose') are required."
+  echo "  Install Docker and add this user to the 'docker' group, or run once as root:"
+  echo "    sudo INSTALL_DOCKER=1 $0   # or: sudo $0 --install-docker"
   exit 1
-fi
+}
 
-# ---------------------------------------------------------------------------
-# 1. Docker + Docker Compose (Debian)
-# ---------------------------------------------------------------------------
 install_docker_debian() {
   if command -v docker &>/dev/null && docker compose version &>/dev/null 2>&1; then
     echo "Docker and Docker Compose already present."
@@ -58,17 +65,20 @@ install_docker_debian() {
 }
 
 if [[ "$INSTALL_DOCKER" == "1" ]]; then
-  if [[ -f /etc/os-release ]]; then
+  if [[ $(id -u) -ne 0 ]]; then
+    echo "INSTALL_DOCKER=1 needs root for apt. Skipping package install; using existing Docker."
+  elif [[ -f /etc/os-release ]]; then
     source /etc/os-release
     if [[ "${ID:-}" == "debian" ]]; then
       install_docker_debian
     else
-      echo "Not Debian (ID=$ID). Skipping Docker install. Ensure Docker and 'docker compose' are available."
+      echo "Not Debian (ID=$ID). Skipping apt Docker install. Ensure Docker and 'docker compose' are available."
     fi
   else
     echo "Cannot detect OS. Skipping Docker install."
   fi
 fi
+ensure_docker_compose
 
 # ---------------------------------------------------------------------------
 # 2. .env from .env.example if missing
