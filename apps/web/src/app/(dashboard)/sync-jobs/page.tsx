@@ -8,7 +8,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 type SyncJob = { id: number; connector_id: number; schedule_cron: string | null; last_run_at: string | null; last_status: string | null };
-type SyncRun = { id: number; sync_job_id: number; started_at: string; finished_at: string | null; status: string; error_message: string | null };
 
 export default function SyncJobsPage() {
   const queryClient = useQueryClient();

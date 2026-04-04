@@ -1,15 +1,16 @@
 # Cloud Ops: Snapshots (ack workflow), Diagnostics (reports), Patch (planning only), Load Balancer (HAProxy)
-from datetime import datetime, timezone, timedelta
+import os
+from datetime import datetime, timezone
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import HTMLResponse
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
-from src.models import Cluster, ProxmoxSnapshot, SnapshotAcknowledgement, Host, VirtualMachine, Datastore, BackupStatus, HAProxyConfigVersion
+from src.models import Cluster, ProxmoxSnapshot, SnapshotAcknowledgement, Host, Datastore, BackupStatus
 
 router = APIRouter(prefix="/cloud-ops", tags=["cloud-ops"])
 
@@ -50,7 +51,6 @@ def list_snapshots_cloud_ops(
         q = q.filter(ProxmoxSnapshot.cluster_id == cluster_id)
     if vm_id is not None:
         q = q.filter(ProxmoxSnapshot.vm_id == vm_id)
-    total = q.count()
     q = q.order_by(ProxmoxSnapshot.created_at.asc()).offset((page - 1) * page_size).limit(page_size)
     now = datetime.now(timezone.utc)
     acks = {(a.cluster_id, a.vm_id): (a.ack_by, a.ack_at.isoformat() if a.ack_at else None) for a in db.query(SnapshotAcknowledgement).all()}
@@ -265,7 +265,45 @@ def lb_push(
     db: Session = Depends(get_db_session),
     current_user: User = Depends(require_permission("admin:all")),
 ):
-    return {"ok": False, "message": "Push placeholder: not implemented"}
+    from src.config import settings
+
+    if not settings.haproxy_ssh_host or not settings.haproxy_remote_config_path:
+        return {"ok": False, "message": "HAProxy SSH not configured (HAPROXY_SSH_HOST, HAPROXY_REMOTE_CONFIG_PATH)"}
+    cfg = """# HAProxy config preview (generated)
+frontend proxmox_api
+    bind *:8006
+    mode tcp
+    default_backend proxmox_nodes
+
+backend proxmox_nodes
+    mode tcp
+    balance roundrobin
+    server pve1 10.0.0.1:8006 check
+    server pve2 10.0.0.2:8006 check
+"""
+    try:
+        import paramiko
+
+        client = paramiko.SSHClient()
+        client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+        pkey = None
+        if settings.haproxy_ssh_key_path and os.path.isfile(settings.haproxy_ssh_key_path):
+            pkey = paramiko.RSAKey.from_private_key_file(settings.haproxy_ssh_key_path)
+        client.connect(
+            settings.haproxy_ssh_host,
+            username=settings.haproxy_ssh_user or "root",
+            pkey=pkey,
+            timeout=30,
+        )
+        sftp = client.open_sftp()
+        with sftp.file(settings.haproxy_remote_config_path, "w") as f:
+            f.write(cfg)
+        sftp.close()
+        client.exec_command("systemctl reload haproxy || service haproxy reload || true")
+        client.close()
+        return {"ok": True, "message": "Config written and reload attempted"}
+    except Exception as e:
+        return {"ok": False, "message": str(e)[:1024]}
 
 
 @router.post("/loadbalancer/rollback")
@@ -273,4 +311,4 @@ def lb_rollback(
     db: Session = Depends(get_db_session),
     current_user: User = Depends(require_permission("admin:all")),
 ):
-    return {"ok": False, "message": "Rollback placeholder: not implemented"}
+    return {"ok": False, "message": "Rollback: restore from backup or HAProxyConfigVersion history (manual)"}

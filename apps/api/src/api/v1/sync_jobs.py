@@ -1,12 +1,11 @@
 # Sync jobs: manual trigger, list runs, history
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
 from src.models import SyncJob, SyncJobRun
 from src.schemas.sync_job import SyncJobResponse, SyncJobRunResponse
-from src.tasks.sync_tasks import run_sync_job
 
 router = APIRouter(prefix="/sync-jobs", tags=["sync-jobs"])
 
@@ -29,6 +28,8 @@ def trigger_sync(
     job = db.query(SyncJob).filter(SyncJob.id == sync_job_id).first()
     if not job:
         raise HTTPException(status_code=404, detail="Sync job not found")
+    from src.tasks.sync_tasks import run_sync_job
+
     run_sync_job.delay(sync_job_id)
     return {"status": "queued", "sync_job_id": sync_job_id}
 

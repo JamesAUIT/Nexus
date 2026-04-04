@@ -39,6 +39,6 @@ Dashboard, Search, Sites, Racks, Hosts, VMs, Containers, Storage, Backups, Netwo
 ## Roadmap
 
 - **Phase 1**: Scaffold (this document and repo state).
-- **Phase 2**: Connector framework, NetBox/Proxmox/vSphere/VyOS/AD stubs, sync jobs, drift/audit framework.
+- **Phase 2**: Connector framework; **NetBox (sites)** and **Proxmox (cluster resources)** live sync; vSphere/VyOS/AD stubs; sync jobs; drift/audit framework.
 - **Phase 3**: Core UI, search, links, reports, runbooks, saved queries, health checks.
 - **Phase 4**: Script library, automation-runner, Proxmox Explorer, Cloud Ops, exports, tests.

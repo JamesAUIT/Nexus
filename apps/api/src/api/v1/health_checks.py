@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 import json
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
 from src.models import HealthCheckDefinition, HealthCheckRun, HealthCheckResult, VirtualMachine, Host, BackupStatus, StorageVolume, Datastore
@@ -99,15 +99,18 @@ def run_health_checks(
                 message = f"Only {backed}/{vms_total} VMs have recent backup"
             details = {"vms_total": vms_total, "vms_with_backup": backed}
         elif defn.check_type == "storage_threshold":
-            datastores = db.query(Datastore).limit(50).all()
-            warnings = []
+            datastores = db.query(Datastore).limit(100).all()
             for ds in datastores:
                 vols = db.query(StorageVolume).filter(StorageVolume.datastore_id == ds.id).all()
-                for v in vols:
-                    if v.capacity_bytes and v.capacity_bytes > 0:
-                        details[f"datastore_{ds.id}"] = "placeholder"
+                caps = [v.capacity_bytes for v in vols if v.capacity_bytes]
+                total_gib = sum(caps) // (1024**3) if caps else 0
+                details[f"datastore_{ds.id}_{ds.name}"] = (
+                    f"{len(vols)} volume(s), ~{total_gib} GiB capacity tracked (free space not modeled)"
+                )
             if not details:
-                details = {"message": "No capacity data yet"}
+                details = {"message": "No datastore/volume rows yet (sync Proxmox storage)"}
+                status = "warning"
+                message = "No storage data"
         else:
             message = "Check not implemented (stub)"
         res = HealthCheckResult(health_check_run_id=run.id, definition_id=defn.id, status=status, message=message, details_json=json.dumps(details) if details else None)

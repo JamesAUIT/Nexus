@@ -1,8 +1,8 @@
 from __future__ import annotations
 
 from datetime import datetime
-from sqlalchemy import String, Integer, DateTime, ForeignKey, Text
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import String, DateTime, ForeignKey, Text
+from sqlalchemy.orm import Mapped, mapped_column
 
 from src.db.base import Base
 
@@ -33,3 +33,4 @@ class OpsRequest(Base):
     created_by: Mapped[int | None] = mapped_column(ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False, index=True)
     sent_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    send_error: Mapped[str | None] = mapped_column(Text, nullable=True)

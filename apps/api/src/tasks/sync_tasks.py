@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 from src.tasks.celery_app import app
 
 from src.config import settings
-from src.db.base import Base
 from src.models import Connector, SyncJob, SyncJobRun
 from src.core.connector_credentials import load_connector_credentials
 from src.connectors.registry import get_connector

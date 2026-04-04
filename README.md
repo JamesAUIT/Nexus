@@ -96,8 +96,10 @@ See [STRUCTURE.md](STRUCTURE.md) for the full tree.
 | `make seed` | Seed demo data (when DEMO_MODE or SEED_DB=1) |
 | `make shell-api` | Shell in API container |
 | `make shell-web` | Shell in Web container |
-| `make test` | Run tests (stub) |
-| `make lint` | Lint API (stub) |
+| `make test` | Run API tests (pytest in `api` container; installs `requirements-dev.txt`) |
+| `make lint` | Ruff check API (`src` in container) |
+| `make lint-web` | Next.js ESLint (requires Node/npm on host) |
+| `make ci` | `test` + `lint` (API via Docker) |
 
 ## Deployment
 
@@ -115,10 +117,18 @@ See [STRUCTURE.md](STRUCTURE.md) for the full tree.
 
 ## Roadmap
 
-- **Phase 1:** Scaffold, Docker, backend/frontend base, auth/encryption/RBAC, seed (current).
-- **Phase 2:** Connector framework, NetBox/Proxmox/vSphere/VyOS/AD stubs, sync jobs, drift/audit.
+- **Phase 1:** Scaffold, Docker, backend/frontend base, auth/encryption/RBAC, seed — **delivered** (CI runs API tests + Ruff and web lint/build).
+- **Phase 2:** Connector framework, **live NetBox (sites) & Proxmox (cluster resources) sync**, vSphere/VyOS/AD config stubs, sync jobs, drift/audit — **delivered** (extend connectors as needed).
 - **Phase 3:** Core UI (search, links, reports, runbooks, saved queries, health checks).
-- **Phase 4:** Script library, automation-runner, Proxmox Explorer, Cloud Ops, exports, tests, docs.
+- **Phase 4:** Script library, automation-runner, Proxmox Explorer, Cloud Ops, exports, docs polish.
+
+### Project status (what “complete” means here)
+
+**Phase 1 is complete:** you can clone, configure `.env`, run `deploy.sh` or `docker compose up --build`, migrate, and operate the platform. GitHub Actions validates API (Ruff + pytest) and web (ESLint + production build) on each push/PR.
+
+**Phase 2 is complete** for the scoped integrations: registry-based connectors, Celery sync jobs, drift run endpoint, **live NetBox site sync** and **live Proxmox resource sync**, with vSphere/VyOS/AD remaining config-level stubs until extended.
+
+**Phases 3–4 and hardening** (richer UI, automation-runner, email, SSO, rate limits, deeper NetBox objects, etc.) are tracked in [Production hardening & TODOs](docs/PRODUCTION-HARDENING.md).
 
 ## Documentation
 

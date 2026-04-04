@@ -6,7 +6,7 @@ from fastapi import APIRouter, Depends, Query, Request
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.core.audit_middleware import log_audit, get_client_ip
 from src.models.user import User
@@ -94,16 +94,33 @@ def send_request(
     db: Session = Depends(get_db_session),
     current_user: User = Depends(require_permission("dashboard:read")),
 ):
+    from fastapi import HTTPException
+
+    from src.config import settings
+    from src.core.smtp_send import send_html_email
+
     rec = db.query(OpsRequest).filter(OpsRequest.id == request_id).first()
     if not rec:
-        from fastapi import HTTPException
         raise HTTPException(status_code=404, detail="Request not found")
     if rec.status != "draft":
-        from fastapi import HTTPException
         raise HTTPException(status_code=400, detail="Only draft can be sent")
+    if not settings.smtp_host:
+        raise HTTPException(status_code=400, detail="SMTP not configured (set SMTP_HOST in environment)")
+    to_addr = rec.recipient or ""
+    if not to_addr:
+        raise HTTPException(status_code=400, detail="No recipient on request")
     now = datetime.now(timezone.utc)
-    rec.status = "sent"
-    rec.sent_at = now
+    try:
+        send_html_email(to_addr, rec.subject or "Operations Request", rec.body_html or "")
+        rec.status = "sent"
+        rec.sent_at = now
+        rec.send_error = None
+    except Exception as e:
+        rec.status = "failed"
+        rec.send_error = str(e)[:4096]
+        db.commit()
+        log_audit(db, current_user.id, "ops_request_send_failed", "ops_request", str(request_id), details=str(e)[:200], ip=get_client_ip(req))
+        raise HTTPException(status_code=502, detail=f"SMTP failed: {e}") from e
     db.commit()
     log_audit(db, current_user.id, "ops_request_sent", "ops_request", str(request_id), details=rec.request_type, ip=get_client_ip(req))
     return {"id": rec.id, "status": "sent", "sent_at": now.isoformat()}

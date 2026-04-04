@@ -1,5 +1,4 @@
 # Audit logging for sensitive actions
-from typing import Any
 
 from sqlalchemy.orm import Session
 

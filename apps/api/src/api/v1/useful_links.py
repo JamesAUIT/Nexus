@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission, get_user_permissions
 from src.models.user import User
 from src.models import UsefulLink

@@ -1,7 +1,6 @@
 """Proxmox-specific findings: no backup, stale snapshot, guest agent missing, ballooning disabled, etc."""
 from datetime import datetime, timezone, timedelta
 from sqlalchemy.orm import Session
-from sqlalchemy import and_
 
 from src.models import (
     Cluster,

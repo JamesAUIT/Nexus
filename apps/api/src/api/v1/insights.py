@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, Query
 
 from sqlalchemy.orm import Session
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
-from src.models import VirtualMachine, ProxmoxSnapshot, BackupStatus, Datastore, TLSCertificate, IDracInventory
+from src.models import VirtualMachine, ProxmoxSnapshot, BackupStatus, Datastore, TLSCertificate, IDracInventory, StorageVolume
 
 router = APIRouter(prefix="/insights", tags=["insights"])
 
@@ -23,10 +23,11 @@ def list_insights(
     now = datetime.now(timezone.utc)
     insights = []
 
-    # Oversized VMs (placeholder: no memory/vCPU in VM model; use name hint)
+    # Oversized VMs — heuristic: any VM with tag or name hint (extend when vCPU/RAM on model)
     if not rule or rule == "oversized_vms":
         for vm in db.query(VirtualMachine).limit(limit).all():
-            insights.append({"rule": "oversized_vms", "entity_type": "vm", "entity_id": str(vm.id), "title": "Review VM sizing", "detail": vm.name, "severity": "low"})
+            if vm.tags and ("large" in vm.tags.lower() or "xl" in vm.tags.lower()):
+                insights.append({"rule": "oversized_vms", "entity_type": "vm", "entity_id": str(vm.id), "title": "Review VM sizing (tag hint)", "detail": vm.name, "severity": "low"})
 
     # Stale snapshots
     if not rule or rule == "stale_snapshots":
@@ -42,10 +43,12 @@ def list_insights(
             if not db.query(BackupStatus).filter(BackupStatus.entity_type == "vm", BackupStatus.entity_id == eid).first():
                 insights.append({"rule": "missing_backups", "entity_type": "vm", "entity_id": str(vm.id), "title": "No backup", "detail": vm.name, "severity": "high"})
 
-    # High storage (placeholder: no capacity in datastore)
+    # High storage — flag datastores with many volumes (capacity model is partial)
     if not rule or rule == "high_storage":
         for d in db.query(Datastore).limit(10).all():
-            insights.append({"rule": "high_storage", "entity_type": "datastore", "entity_id": str(d.id), "title": "Review storage usage", "detail": d.name, "severity": "low"})
+            nvol = db.query(StorageVolume).filter(StorageVolume.datastore_id == d.id).count()
+            if nvol >= 5:
+                insights.append({"rule": "high_storage", "entity_type": "datastore", "entity_id": str(d.id), "title": "Many volumes on datastore", "detail": f"{d.name} ({nvol} volumes)", "severity": "low"})
 
     # Firmware outdated
     if not rule or rule == "firmware_outdated":

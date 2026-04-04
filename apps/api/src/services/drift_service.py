@@ -12,8 +12,6 @@ from src.models import (
     DriftFinding,
     VirtualMachine,
     Host,
-    Site,
-    Rack,
 )
 
 
@@ -77,8 +75,52 @@ def run_drift_check(db: Session) -> int:
             ))
             count += 1
 
-    # IP mismatch: placeholder - when we have NetBox IP and live IP we compare
-    # Owner missing: already added for VMs without owner
-    # Tag mismatch: when tags differ (simplified - just check presence)
+    # IP mismatch: NetBox-synced host (nb-device-*) vs VM with same name
+    for vm in db.query(VirtualMachine).filter(VirtualMachine.ip_address.isnot(None)).all():
+        if not vm.name or not vm.ip_address:
+            continue
+        nbh = (
+            db.query(Host)
+            .filter(Host.name == vm.name, Host.external_id.isnot(None))
+            .filter(Host.external_id.like("nb-device%"))
+            .first()
+        )
+        if nbh and nbh.ip_address and nbh.ip_address.strip() != vm.ip_address.strip():
+            db.add(
+                DriftFinding(
+                    resource_type="virtual_machine",
+                    resource_id=str(vm.id),
+                    drift_type="ip_mismatch",
+                    field_name="ip_address",
+                    expected_value=nbh.ip_address,
+                    actual_value=vm.ip_address,
+                    source_of_truth="netbox",
+                    discovered_from="live",
+                )
+            )
+            count += 1
+
+    # Tag mismatch when both sides have tags
+    for vm in db.query(VirtualMachine).filter(VirtualMachine.tags.isnot(None)).all():
+        nbh = (
+            db.query(Host)
+            .filter(Host.name == vm.name, Host.external_id.like("nb-device%"))
+            .first()
+        )
+        if nbh and nbh.tags and vm.tags and nbh.tags.strip() != vm.tags.strip():
+            db.add(
+                DriftFinding(
+                    resource_type="virtual_machine",
+                    resource_id=str(vm.id),
+                    drift_type="tag_mismatch",
+                    field_name="tags",
+                    expected_value=nbh.tags[:512],
+                    actual_value=vm.tags[:512],
+                    source_of_truth="netbox",
+                    discovered_from="live",
+                )
+            )
+            count += 1
+
     db.commit()
     return count

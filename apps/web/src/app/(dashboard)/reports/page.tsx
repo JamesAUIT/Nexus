@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { apiFetch } from "@/lib/api";
+import { apiFetch, apiUrl } from "@/lib/api";
 import { getToken } from "@/hooks/useAuthToken";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -21,9 +21,23 @@ export default function ReportsPage() {
     queryFn: () => apiFetch<ReportRun[]>("/api/v1/reports/runs", { token: getToken() }),
   });
   const runReport = useMutation({
-    mutationFn: (id: number) => apiFetch<{ run_id: number }>(`/api/v1/reports/definitions/${id}/run`, { method: "POST", token: getToken() }),
+    mutationFn: (id: number) => apiFetch<{ run_id: number; result_path?: string }>(`/api/v1/reports/definitions/${id}/run`, { method: "POST", token: getToken() }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["report-runs"] }),
   });
+
+  async function downloadRun(runId: number) {
+    const token = getToken();
+    const res = await fetch(apiUrl(`/api/v1/reports/runs/${runId}/download`), {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!res.ok) throw new Error("Download failed");
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = `report-${runId}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   return (
     <div>
@@ -50,7 +64,7 @@ export default function ReportsPage() {
                   <TableCell className="text-muted-foreground">{d.description ?? "—"}</TableCell>
                   <TableCell>
                     <Button size="sm" variant="outline" onClick={() => runReport.mutate(d.id)} disabled={runReport.isPending}>
-                      Run (CSV placeholder)
+                      Run (CSV)
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -71,6 +85,7 @@ export default function ReportsPage() {
                 <TableHead>Report ID</TableHead>
                 <TableHead>Started</TableHead>
                 <TableHead>Status</TableHead>
+                <TableHead></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -80,6 +95,15 @@ export default function ReportsPage() {
                   <TableCell>{r.report_definition_id}</TableCell>
                   <TableCell className="text-muted-foreground">{r.started_at}</TableCell>
                   <TableCell>{r.status}</TableCell>
+                  <TableCell>
+                    {r.result_path ? (
+                      <Button size="sm" variant="secondary" type="button" onClick={() => downloadRun(r.id)}>
+                        Download
+                      </Button>
+                    ) : (
+                      "—"
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>

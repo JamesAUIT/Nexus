@@ -21,6 +21,15 @@
 - With demo mode, default admin password is `admin` (override with `ADMIN_PASSWORD`). Without demo mode, use `ADMIN_PASSWORD` for the break-glass admin.
 - Run seed: from repo root `make seed`, or from `apps/api`: `python -m src.db.seed` (with `PYTHONPATH` set to include `apps/api`).
 
+## Connectors (Phase 2)
+
+Encrypted connector config is JSON. Examples:
+
+- **NetBox:** `{"url": "https://netbox.example.com", "token": "<API token>", "verify_ssl": true}`
+- **Proxmox:** `{"url": "https://pve.example.com:8006", "user": "root@pam", "password": "…", "verify_ssl": false}` (if `user` has no `@`, `@pam` is appended.)
+
+Live sync: **NetBox** imports **sites** into `sites`; **Proxmox** imports **nodes** as hosts and **qemu/lxc** as VMs under a cluster keyed to the connector. **vSphere / VyOS / AD** validate config only until extended.
+
 ## Backend tests
 
 - From repo root: `make test` (runs pytest in API container).
@@ -48,7 +57,7 @@
 - `apps/web` — Next.js frontend.
 - `services/worker` — Celery worker.
 - `services/automation-runner` — Automation runner (stub).
-- `services/connector-*` — Connectors (Phase 2).
+- `services/connector-*` — Optional sidecar stubs; live sync runs in the API (`apps/api/src/connectors/`).
 - `packages/shared-types`, `shared-ui`, `shared-utils` — Shared code.
 - `infra/` — Docker and nginx config.
 - `docs/` — Architecture, deployment, development.

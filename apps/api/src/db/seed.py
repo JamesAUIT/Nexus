@@ -14,8 +14,7 @@ from src.models import (
     Role, User, Site, Rack, Cluster, Host, VirtualMachine,
     Connector, SyncJob, UsefulLink, Runbook,
     ReportDefinition, HealthCheckDefinition,
-    ProxmoxSnapshot, ProxmoxTask, BackupStatus, Datastore,
-    LinkTemplate, ScriptDefinition, ChangeEvent,
+    ProxmoxSnapshot, ProxmoxTask, BackupStatus, LinkTemplate, ScriptDefinition, ChangeEvent,
     OpsRequestTemplate,
 )
 from src.core.security import hash_password

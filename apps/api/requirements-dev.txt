@@ -1,0 +1,4 @@
+# Dev / CI only — not installed in production API image by default
+pytest>=7.4.0
+httpx>=0.26.0
+ruff>=0.4.0

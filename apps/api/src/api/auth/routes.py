@@ -2,15 +2,22 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlalchemy.orm import Session
 
 from src.api.deps import get_db_session, get_current_user
+from src.config import settings
+from src.core.limiter import limiter
 from src.core.security import verify_password, create_access_token
 from src.core.audit_middleware import log_audit, get_client_ip
 from src.models.user import User
 from src.schemas.user import UserCreate, UserResponse, Token
+from src.api.auth.oidc import router as oidc_router
+from src.api.auth.ldap import router as ldap_router
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+router.include_router(oidc_router)
+router.include_router(ldap_router)
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit(settings.auth_login_rate_limit)
 def login(
     request: Request,
     body: UserCreate,

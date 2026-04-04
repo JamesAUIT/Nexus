@@ -14,8 +14,9 @@
 
 ## Placeholder / stub integrations
 
-- **Proxmox connector**: `test_connectivity` and `sync` are stubs; no real Proxmox API calls.
-- **NetBox / vSphere / VyOS / AD connectors**: Stub implementations.
+- **NetBox connector**: Live REST sync for **sites** (`/api/dcim/sites/`). Racks/devices are future extensions.
+- **Proxmox connector**: Live ticket auth + **cluster resources** sync (nodes as hosts, qemu/lxc as VMs).
+- **vSphere / VyOS / AD connectors**: Config validation only; live sync still TODO (pyvmomi, SSH, LDAP).
 - **iDRAC scan**: Writes placeholder BIOS/iDRAC version; no Redfish API.
 - **Drift service**: Creates findings from DB state; no live NetBox comparison.
 - **Operations Requests send**: Status set to `sent` but no email sent; integrate with mail gateway.
@@ -39,7 +40,7 @@
 
 - Automation-runner service: execute approved scripts only; no UI-triggered arbitrary execution.
 - Email integration for Operations Requests (SMTP or API).
-- Real Proxmox/NetBox sync and Redfish iDRAC fetch.
+- Deeper NetBox (racks, devices, IPs) and Redfish iDRAC fetch; vSphere/VyOS/AD live sync.
 - Report and health-check logic (CSV export, full check implementations).
 - Load balancer config push/rollback implementation.
 - Optional: SSO/OIDC and LDAP wiring (settings exist; routes to implement).

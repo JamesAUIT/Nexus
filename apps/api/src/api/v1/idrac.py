@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query
 from sqlalchemy.orm import Session
 from pydantic import BaseModel
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
 from src.models import IDracInventory, Host
@@ -59,25 +59,61 @@ def run_scan(
     db: Session = Depends(get_db_session),
     current_user: User = Depends(require_permission("hosts:read")),
     host_id: int = Query(...),
+    username: str | None = Query(None, description="iDRAC/Redfish user"),
+    password: str | None = Query(None, description="iDRAC/Redfish password"),
 ):
+    import httpx
     from datetime import datetime, timezone
+
     host = db.query(Host).filter(Host.id == host_id).first()
     if not host:
         return {"ok": False, "error": "Host not found"}
-    # Placeholder: would call Redfish API; store stub result
+    base = host.ip_address or host.name
+    if not base.startswith("http"):
+        target = f"https://{base}"
+    else:
+        target = base
     now = datetime.now(timezone.utc)
+    bios_ver = None
+    idrac_ver = None
+    err = None
+    if username and password:
+        try:
+            sys_url = f"{target.rstrip('/')}/redfish/v1/Systems/System.Embedded.1"
+            with httpx.Client(verify=False, timeout=30.0) as client:
+                r = client.get(sys_url, auth=(username, password))
+                r.raise_for_status()
+                data = r.json()
+                bios_ver = (data.get("BiosVersion") or data.get("Bios", {}).get("Version") if isinstance(data.get("Bios"), dict) else None)
+                if isinstance(bios_ver, dict):
+                    bios_ver = bios_ver.get("Version")
+                mgr_url = f"{target.rstrip('/')}/redfish/v1/Managers/iDRAC.Embedded.1"
+                r2 = client.get(mgr_url, auth=(username, password))
+                if r2.status_code == 200:
+                    m = r2.json()
+                    idrac_ver = m.get("FirmwareVersion") or m.get("ManagerFirmwareVersion")
+        except Exception as e:
+            err = str(e)[:1024]
     inv = db.query(IDracInventory).filter(IDracInventory.host_id == host_id).first()
-    if inv:
-        inv.bios_version = inv.bios_version or "2.0.0"
-        inv.idrac_version = inv.idrac_version or "5.0.0"
-        inv.compliance_status = "unknown"
+    if not inv:
+        inv = IDracInventory(
+            host_id=host_id,
+            target_url=target,
+            bios_version=bios_ver or "unknown",
+            idrac_version=idrac_ver or "unknown",
+            compliance_status="unknown",
+            last_scan_at=now,
+            scan_error=err,
+        )
+        db.add(inv)
+    else:
+        inv.target_url = target
+        if bios_ver:
+            inv.bios_version = bios_ver
+        if idrac_ver:
+            inv.idrac_version = idrac_ver
         inv.last_scan_at = now
-        inv.scan_error = None
-        db.commit()
-        db.refresh(inv)
-        return {"ok": True, "id": inv.id}
-    inv = IDracInventory(host_id=host_id, target_url=f"https://{host.ip_address or host.name}", bios_version="2.0.0", idrac_version="5.0.0", compliance_status="unknown", last_scan_at=now)
-    db.add(inv)
+        inv.scan_error = err
     db.commit()
     db.refresh(inv)
-    return {"ok": True, "id": inv.id}
+    return {"ok": err is None, "id": inv.id, "error": err}

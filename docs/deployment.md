@@ -74,11 +74,17 @@ docker compose run --rm api alembic upgrade head
 docker compose run --rm api python -m src.db.seed   # with DEMO_MODE=true or SEED_DB=1
 ```
 
+The API process **does not** run Alembic migrations automatically on startup. Always run `alembic upgrade head` (or your orchestration equivalent) after deploying a new image.
+
 ## Reverse proxy (HTTPS on 443)
 
 Compose includes **nginx** (`infra/nginx/`) listening on **443** (TLS) and **80** (redirect to HTTPS). The UI and `/api/…` share the same host; leave `NEXT_PUBLIC_API_URL` empty in `.env` for same-origin API calls. Replace the generated self-signed certificate in production (mount real certs or rebuild the image).
 
 For local development without TLS, you can expose `web` on 3000 and `api` on 8000 via `docker-compose.override.yml` (see `docker-compose.override.example.yml`) and set `NEXT_PUBLIC_API_URL=http://localhost:8000`.
+
+**CORS:** set `CORS_ORIGINS` to a comma-separated list of allowed browser origins when the UI is on a different host than the API. Leave empty when nginx serves both UI and `/api` on the same origin.
+
+**Ops email:** configure `SMTP_*` variables on the API service if you use “send” on ops requests.
 
 ## Troubleshooting
 

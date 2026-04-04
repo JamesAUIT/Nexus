@@ -1,5 +1,8 @@
 "use client";
 
+/* SVG brand assets from /public; static local files — no need for next/image here. */
+/* eslint-disable @next/next/no-img-element */
+
 import Link from "next/link";
 
 /** Static assets under `apps/web/public/logo`. */

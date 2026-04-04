@@ -7,7 +7,6 @@ import { getToken } from "@/hooks/useAuthToken";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 
 const CLOUD_OPS_TABS = ["Snapshots", "Diagnostics", "Patch", "Load Balancer"] as const;
 type CloudOpsTab = (typeof CLOUD_OPS_TABS)[number];

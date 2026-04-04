@@ -1,14 +1,13 @@
 # Proxmox Explorer API: nodes, VMs, storage, snapshots, backups, networks, containers, disks, tasks, replication, HA
 from io import BytesIO
-from typing import Any
 
 from fastapi import APIRouter, Depends, Query
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session
-from sqlalchemy import or_, func, and_
+from sqlalchemy import or_
 from pydantic import BaseModel
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.core.cache import cache_get, cache_set
 from src.models.user import User
@@ -17,7 +16,6 @@ from src.models import (
     Host,
     VirtualMachine,
     Datastore,
-    StorageVolume,
     BackupStatus,
     ProxmoxSnapshot,
     ProxmoxFinding,

@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends
 
 from sqlalchemy.orm import Session
 
-from src.api.deps import get_db_session, get_current_user
+from src.api.deps import get_db_session
 from src.core.rbac import require_permission
 from src.models.user import User
-from src.models import Connector, SyncJob, SyncJobRun, TLSCertificate, IDracInventory, ProxmoxSnapshot, BackupStatus, VirtualMachine, ChangeEvent
+from src.models import Connector, SyncJobRun, TLSCertificate, IDracInventory, ProxmoxSnapshot, BackupStatus, VirtualMachine, ChangeEvent
 
 router = APIRouter(prefix="/dashboard", tags=["dashboard"])
 

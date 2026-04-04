@@ -2,8 +2,7 @@
 import json
 from typing import Annotated
 
-from fastapi import Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from fastapi import Depends, HTTPException
 
 from src.api.deps import get_current_user
 from src.models.user import User
