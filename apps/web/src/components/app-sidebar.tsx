@@ -40,11 +40,11 @@ const nav = [
 export function AppSidebar() {
   const pathname = usePathname();
   return (
-    <aside className="w-64 border-r bg-muted/30 flex flex-col min-h-screen">
-      <div className="p-4 border-b flex items-center min-w-0">
+    <aside className="sticky top-0 flex h-screen w-64 shrink-0 flex-col overflow-hidden border-r bg-muted/30">
+      <div className="flex shrink-0 items-center border-b p-4 min-w-0">
         <CloudNexusLogo href="/dashboard" iconSize={28} />
       </div>
-      <nav className="flex-1 p-2 space-y-0.5 overflow-auto">
+      <nav className="min-h-0 flex-1 space-y-0.5 overflow-y-auto overscroll-contain p-2">
         {nav.map((item) => (
           <Link
             key={item.href}

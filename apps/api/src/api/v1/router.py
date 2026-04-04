@@ -30,6 +30,7 @@ from src.api.v1 import scripts as scripts_router
 from src.api.v1 import dashboard_widgets as dashboard_widgets_router
 from src.api.v1 import ops_requests as ops_requests_router
 from src.api.v1 import internal_runner as internal_runner_router
+from src.api.v1 import platform as platform_router
 
 router = APIRouter(prefix="/api/v1")
 router.include_router(auth_router)
@@ -63,3 +64,4 @@ router.include_router(scripts_router.router)
 router.include_router(dashboard_widgets_router.router)
 router.include_router(ops_requests_router.router)
 router.include_router(internal_runner_router.router)
+router.include_router(platform_router.router)

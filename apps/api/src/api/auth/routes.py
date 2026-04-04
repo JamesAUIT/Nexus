@@ -16,6 +16,20 @@ router.include_router(oidc_router)
 router.include_router(ldap_router)
 
 
+@router.get("/public-options")
+def auth_public_options():
+    """Safe flags for the login UI (no authentication required)."""
+    return {
+        "oidc_enabled": bool(settings.oidc_issuer_url and settings.oidc_client_id),
+        "ldap_enabled": bool(
+            settings.ldap_url
+            and settings.ldap_base_dn
+            and settings.ldap_bind_dn
+            and settings.ldap_bind_password
+        ),
+    }
+
+
 @router.post("/login", response_model=Token)
 @limiter.limit(settings.auth_login_rate_limit)
 def login(

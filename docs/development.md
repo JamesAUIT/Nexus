@@ -23,6 +23,8 @@
 
 ## Connectors (Phase 2)
 
+In the web UI, **Settings** includes an **Add connector** form (requires `connectors:write`); it calls `POST /api/v1/connectors` and optionally creates a sync job.
+
 Encrypted connector config is JSON. Examples:
 
 - **NetBox:** `{"url": "https://netbox.example.com", "token": "<API token>", "verify_ssl": true}`
